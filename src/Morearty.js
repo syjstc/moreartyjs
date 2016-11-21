@@ -16,12 +16,16 @@ var MERGE_STRATEGY = Object.freeze({
   MERGE_REPLACE: 'merge-replace'
 });
 
-var getBinding, bindingStateChanged, stateChanged;
+var getBinding, bindingStateChanged, stateChanged, isBinding;
 
 getBinding = function (props, key) {
   var binding = props.binding;
   return key ? binding[key] : binding;
 };
+
+isBinding = function(binding) {
+  return typeof binding.get === 'function';
+}
 
 bindingStateChanged = function (context, currentBinding, previousState, previousMetaState) {
   return (context._stateChanged && previousState !== currentBinding.get()) ||
@@ -33,7 +37,7 @@ stateChanged = function (self, currentBinding, previousBinding, previousState, p
   else {
     var context = self.getMoreartyContext();
 
-    if (currentBinding instanceof Binding) {
+    if (isBinding(currentBinding)) {
       return currentBinding !== previousBinding || bindingStateChanged(context, currentBinding, previousState, previousMetaState);
     } else {
       if (context._stateChanged || context._metaChanged) {
@@ -136,7 +140,7 @@ initState = function (self, getStateMethodName, f) {
 
       var immutableInstance = Imm.Iterable.isIterable(defaultStateValue);
 
-      if (binding instanceof Binding) {
+      if (isBinding(binding)) {
         var effectiveDefaultStateValue = immutableInstance ? defaultStateValue : defaultStateValue['default'];
         merge(mergeStrategy, effectiveDefaultStateValue, f(binding));
       } else {
@@ -171,7 +175,7 @@ savePreviousState = function (self) {
   if (binding) {
     var ctx = self.getMoreartyContext();
     self._previousMetaState = ctx && ctx.getCurrentMeta();
-    if (binding instanceof Binding) {
+    if (isBinding(binding)) {
       self._previousState = binding.get();
     } else {
       self._previousState = {};
@@ -519,7 +523,7 @@ module.exports = function (React, DOM) {
         displayName: 'Bootstrap',
 
         childContextTypes: {
-          morearty: React.PropTypes.instanceOf(Context).isRequired
+          morearty: React.PropTypes.object.isRequired
         },
 
         getChildContext: function () {
@@ -587,7 +591,7 @@ module.exports = function (React, DOM) {
     Mixin: {
 
       contextTypes: {
-        morearty: React.PropTypes.instanceOf(Context).isRequired
+        morearty: React.PropTypes.object.isRequired
       },
 
       /** Get Morearty context.
@@ -619,7 +623,7 @@ module.exports = function (React, DOM) {
       getDefaultBinding: function () {
         var binding = getBinding(this.props);
         if (binding) {
-          if (binding instanceof Binding) {
+          if (isBinding(binding)) {
             return binding;
           } else if (typeof binding === 'object') {
             var keys = Object.keys(binding);
@@ -696,7 +700,7 @@ module.exports = function (React, DOM) {
       addBindingListener: function (binding, subpath, cb) {
         var args = Util.resolveArgs(
           arguments,
-          function (x) { return x instanceof Binding ? 'binding' : null; },
+          function (x) { return isBinding(Binding) ? 'binding' : null; },
           function (x) { return Util.canRepresentSubpath(x) ? 'subpath' : null; },
           'cb'
         );

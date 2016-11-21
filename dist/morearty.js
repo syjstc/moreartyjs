@@ -94,7 +94,7 @@ removeValue = function (self, subpath) {
       if (backingValue.has(pathTo[0]) || len === 1) {
         var newBackingValue = backingValue.updateIn(pathTo, function (coll) {
           var key = effectivePath[len - 1];
-          if (coll instanceof Imm.List) {
+          if (Imm.List.isList(coll)) {
             return coll.splice(key, 1);
           } else {
             return coll && coll.remove(key);
@@ -112,7 +112,7 @@ merge = function (preserve, newValue, value) {
   if (Util.undefinedOrNull(value)) {
     return newValue;
   } else {
-    if (value instanceof Imm.Iterable && newValue instanceof Imm.Iterable) {
+    if (Imm.Iterable.isIterable(value) && Imm.Iterable.isIterable(value)) {
       return preserve ? newValue.mergeDeep(value) : value.mergeDeep(newValue);
     } else {
       return preserve ? value : newValue;
@@ -121,7 +121,7 @@ merge = function (preserve, newValue, value) {
 };
 
 clear = function (value) {
-  return value instanceof Imm.Iterable ? value.clear() : null;
+  return Imm.Iterable.isIterable(value) ? value.clear() : null;
 };
 
 var mkStateTransition =
@@ -428,7 +428,7 @@ var bindingPrototype = {
    * @return {*} JS representation of data at subpath */
   toJS: function (subpath) {
     var value = this.sub(subpath).get();
-    return value instanceof Imm.Iterable ? value.toJS() : value;
+    return Imm.Iterable.isIterable(value) ? value.toJS() : value;
   },
 
   /** Bind to subpath. Both bindings share the same backing value. Changes are mutually visible.
@@ -1256,12 +1256,16 @@ var MERGE_STRATEGY = Object.freeze({
   MERGE_REPLACE: 'merge-replace'
 });
 
-var getBinding, bindingStateChanged, stateChanged;
+var getBinding, bindingStateChanged, stateChanged, isBinding;
 
 getBinding = function (props, key) {
   var binding = props.binding;
   return key ? binding[key] : binding;
 };
+
+isBinding = function(binding) {
+  return typeof binding.get === 'function';
+}
 
 bindingStateChanged = function (context, currentBinding, previousState, previousMetaState) {
   return (context._stateChanged && previousState !== currentBinding.get()) ||
@@ -1273,7 +1277,7 @@ stateChanged = function (self, currentBinding, previousBinding, previousState, p
   else {
     var context = self.getMoreartyContext();
 
-    if (currentBinding instanceof Binding) {
+    if (isBinding(currentBinding)) {
       return currentBinding !== previousBinding || bindingStateChanged(context, currentBinding, previousState, previousMetaState);
     } else {
       if (context._stateChanged || context._metaChanged) {
@@ -1331,7 +1335,7 @@ var merge = function (mergeStrategy, defaultState, stateBinding) {
       case MERGE_STRATEGY.OVERWRITE_EMPTY:
         tx = tx.update(function (currentState) {
           var empty = Util.undefinedOrNull(currentState) ||
-            (currentState instanceof Imm.Iterable && currentState.isEmpty());
+            (Imm.Iterable.isIterable(currentState) && currentState.isEmpty());
           return empty ? defaultState : currentState;
         });
         break;
@@ -1374,9 +1378,9 @@ initState = function (self, getStateMethodName, f) {
       var mergeStrategy =
         typeof self.getMergeStrategy === 'function' ? self.getMergeStrategy() : MERGE_STRATEGY.MERGE_PRESERVE;
 
-      var immutableInstance = defaultStateValue instanceof Imm.Iterable;
+      var immutableInstance = Imm.Iterable.isIterable(defaultStateValue);
 
-      if (binding instanceof Binding) {
+      if (isBinding(binding)) {
         var effectiveDefaultStateValue = immutableInstance ? defaultStateValue : defaultStateValue['default'];
         merge(mergeStrategy, effectiveDefaultStateValue, f(binding));
       } else {
@@ -1411,7 +1415,7 @@ savePreviousState = function (self) {
   if (binding) {
     var ctx = self.getMoreartyContext();
     self._previousMetaState = ctx && ctx.getCurrentMeta();
-    if (binding instanceof Binding) {
+    if (isBinding(binding)) {
       self._previousState = binding.get();
     } else {
       self._previousState = {};
@@ -1452,6 +1456,13 @@ setupObservedBindingListener = function (self, binding) {
   self._observedListenerRemovers.push(function () {
     binding.removeListener(listenerId);
   });
+};
+
+var defaultLogger = {
+  error: function (message, cause) {
+    console.error(message);
+    console.error('Error details: %s', cause.message, cause.stack);
+  }
 };
 
 module.exports = function (React, DOM) {
@@ -1589,7 +1600,7 @@ module.exports = function (React, DOM) {
     replaceState: function (newState, newMetaState, options) {
       var args = Util.resolveArgs(
         arguments,
-        'newState', function (x) { return x instanceof Imm.Map ? 'newMetaState' : null; }, '?options'
+        'newState', function (x) { return Imm.Map.isMap(x) ? 'newMetaState' : null; }, '?options'
       );
 
       var effectiveOptions = args.options || {};
@@ -1656,6 +1667,17 @@ module.exports = function (React, DOM) {
         }
       };
 
+      var logError = function (message, cause) {
+        if (self._options.logger) {
+          try {
+            self._options.logger.error(message, cause);
+          }
+          catch (e) {
+            defaultLogger.error(message, cause);
+          }
+        }
+      };
+
       var catchingRenderErrors = function (f) {
         try {
           f();
@@ -1664,8 +1686,7 @@ module.exports = function (React, DOM) {
             stop = true;
           }
 
-          console.error('Morearty: render error. ' + (stop ? 'Will exit on next render attempt.' : 'Continuing.'));
-          console.error('Error details: %s', e.message, e.stack);
+          logError('Morearty: render error. ' + (stop ? 'Will exit on next render attempt.' : 'Continuing.'), e);
         }
       };
 
@@ -1742,7 +1763,7 @@ module.exports = function (React, DOM) {
         displayName: 'Bootstrap',
 
         childContextTypes: {
-          morearty: React.PropTypes.instanceOf(Context).isRequired
+          morearty: React.PropTypes.object.isRequired
         },
 
         getChildContext: function () {
@@ -1810,7 +1831,7 @@ module.exports = function (React, DOM) {
     Mixin: {
 
       contextTypes: {
-        morearty: React.PropTypes.instanceOf(Context).isRequired
+        morearty: React.PropTypes.object.isRequired
       },
 
       /** Get Morearty context.
@@ -1842,7 +1863,7 @@ module.exports = function (React, DOM) {
       getDefaultBinding: function () {
         var binding = getBinding(this.props);
         if (binding) {
-          if (binding instanceof Binding) {
+          if (isBinding(binding)) {
             return binding;
           } else if (typeof binding === 'object') {
             var keys = Object.keys(binding);
@@ -1919,7 +1940,7 @@ module.exports = function (React, DOM) {
       addBindingListener: function (binding, subpath, cb) {
         var args = Util.resolveArgs(
           arguments,
-          function (x) { return x instanceof Binding ? 'binding' : null; },
+          function (x) { return isBinding(Binding) ? 'binding' : null; },
           function (x) { return Util.canRepresentSubpath(x) ? 'subpath' : null; },
           'cb'
         );
@@ -1968,6 +1989,8 @@ module.exports = function (React, DOM) {
      *                  ensure render is executed only once (useful for server-side rendering to save resources),
      *                  any further state updates are ignored
      * @param {Boolean} [spec.options.stopOnRenderError=false] stop on errors during render
+     * @param {Object} [spec.options.logger=undefined] an optional logger object for reporting errors
+     * @param {function} [spec.options.logger.error] function accepting error message and optional cause
      * @return {Context}
      * @memberOf Morearty */
     createContext: function (spec) {
@@ -1988,7 +2011,7 @@ module.exports = function (React, DOM) {
       }
 
       var ensureImmutable = function (state) {
-        return state instanceof Imm.Iterable ? state : Imm.fromJS(state);
+        return Imm.Iterable.isIterable(state) ? state : Imm.fromJS(state);
       };
 
       var state = ensureImmutable(initialState || {});
@@ -2001,7 +2024,8 @@ module.exports = function (React, DOM) {
       return new Context(binding, metaBinding, {
         requestAnimationFrameEnabled: effectiveOptions.requestAnimationFrameEnabled !== false,
         renderOnce: effectiveOptions.renderOnce || false,
-        stopOnRenderError: effectiveOptions.stopOnRenderError || false
+        stopOnRenderError: effectiveOptions.stopOnRenderError || false,
+        logger: effectiveOptions.logger || defaultLogger
       });
     }
 
