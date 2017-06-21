@@ -50,7 +50,7 @@ stateChanged = function (self, currentBinding, previousBinding, previousState, p
   }
 };
 
-var propChanged, countProps, propsChanged;
+var propChanged, countProps, propsChanged, changeState,  countStates, thisStateChange;
 
 propChanged = function (prop, currentProps, previousProps) {
   return currentProps[prop] !== previousProps[prop];
@@ -71,6 +71,28 @@ propsChanged = function (self, currentProps) {
     for (var prop in effectiveCurrentProps) {
       //noinspection JSUnfilteredForInLoop
       if (prop !== 'binding' && propChanged(prop, effectiveCurrentProps, effectivePreviousProps)) return true;
+    }
+    return false;
+  }
+};
+
+countStates = function (states) {
+  var count = 0;
+  for (var ignore in states) ++count;
+  return count;
+};
+
+changeState = function (state, currentState, previousState) {
+  return currentState[state] !== previousState[state];
+}
+
+thisStateChange = function (self, currentState) {
+  var effectiveCurrentStates = currentState || {}, effectivePreviousStates = self.state || {};
+  if(countStates(effectiveCurrentStates) !== countStates(effectivePreviousStates)) {
+    return true;
+  } else {
+    for(var state in effectiveCurrentStates) {
+      if( changeState(state, effectiveCurrentStates, effectivePreviousStates)) return true;
     }
     return false;
   }
@@ -678,6 +700,7 @@ module.exports = function (React, DOM) {
 
         var shouldComponentUpdate = function () {
           return ctx._fullUpdateInProgress ||
+            thisStateChange(self, nextState) ||
             stateChanged(self, getBinding(nextProps), getBinding(self.props), previousState, previousMetaState) ||
             propsChanged(self, nextProps);
         };
