@@ -909,6 +909,46 @@ describe('Morearty', function () {
         });
       });
 
+      it('should return true if component state is changed', function (done) {
+        var ctx = createCtx(IMap());
+        var shouldUpdate = [];
+        var self;
+        var subComp = createClass({
+          shouldComponentUpdateOverride: function (shouldComponentUpdate) {
+            var result = shouldComponentUpdate();
+            shouldUpdate.push(result);
+            return result;
+          },
+          getInitialState: function() {
+            self = this
+            return {  key: '1' }
+          },
+          render: function () {
+            return null;
+          }
+        });
+
+        var rootComp = createClass({
+          render: function () {
+            var binding = this.getDefaultBinding();
+            return React.createFactory(subComp)({ binding: binding });
+          }
+        });
+
+        var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
+
+        React.render(bootstrapComp(), global.document.getElementById('root'));
+
+        waitRender(function () {
+          self.setState({ key: '2' });
+          waitRender(function () {
+            self.setState({ key: '3' });
+            self.setState({ key: '3' }); // when value didn't change
+            assert.deepEqual(shouldUpdate, [true, true, false]);
+            done();
+          });
+        });
+      });
 
       it('should return true if meta state is changed', function (done) {
         var ctx = createCtx(IMap({ root: IMap({ key1: 'value1', key2: 'value2' }) }));
