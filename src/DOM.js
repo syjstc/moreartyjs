@@ -1,15 +1,18 @@
-var Util  = require('./Util');
-var React = require('react');
+const Util  = require('./Util');
+const React = require('react');
+const ReactDom = require('react-dom');
+const createClass = require('create-react-class');
+
 
 var _ = (function() {
-  if (React) return React.DOM;
+  if (React) return React.createElement;
   else {
     throw new Error('Morearty: global variable React not found');
   }
 })();
 
-var wrapComponent = function (comp, displayName) {
-  return React.createClass({
+function wrapComponent(comp, displayName) {
+  return createClass({
 
     displayName: displayName,
 
@@ -41,6 +44,12 @@ var wrapComponent = function (comp, displayName) {
   });
 };
 
+
+function createElement(tag) {
+  return function(props, children) {
+    return _(tag, props, children)
+  }
+}
 /**
  * @name DOM
  * @namespace
@@ -48,11 +57,11 @@ var wrapComponent = function (comp, displayName) {
  */
 var DOM = {
 
-  input: wrapComponent(_.input, 'input'),
+  input: wrapComponent(createElement('input'), 'input'),
 
-  textarea: wrapComponent(_.textarea, 'textarea'),
+  textarea: wrapComponent(createElement('textarea'), 'textarea'),
 
-  option: wrapComponent(_.option, 'option')
+  option: wrapComponent(createElement('option'), 'option')
 
 };
 

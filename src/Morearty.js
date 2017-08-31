@@ -4,6 +4,8 @@
  * @classdesc Morearty main module. Exposes [createContext]{@link Morearty.createContext} function.
  */
 var Imm      = require('immutable');
+var PropTypes  = require('prop-types');
+var createClass = require('create-react-class');
 var Util     = require('./Util');
 var Binding  = require('./Binding');
 var History  = require('./History');
@@ -545,11 +547,11 @@ module.exports = function (React, DOM) {
       var effectiveReactContext = reactContext || {};
       effectiveReactContext.morearty = ctx;
 
-      return React.createClass({
+      return createClass({
         displayName: 'Bootstrap',
 
         childContextTypes: {
-          morearty: React.PropTypes.object.isRequired
+          morearty: PropTypes.instanceOf(Context).isRequired
         },
 
         getChildContext: function () {
@@ -617,7 +619,7 @@ module.exports = function (React, DOM) {
     Mixin: {
 
       contextTypes: {
-        morearty: React.PropTypes.object.isRequired
+        morearty: PropTypes.instanceOf(Context).isRequired
       },
 
       /** Get Morearty context.

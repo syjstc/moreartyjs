@@ -38,24 +38,29 @@
   ],
   "devDependencies": {
     "browserify": "^12.0.x",
+    "browserify-shim": "^3.8.x",
     "chai": "^3.4.0",
+    "create-react-class": "^15.6.0",
     "domino": "^1.0.x",
+    "immutable": "~3.8.x",
     "jquery": "^2.1.x",
     "jsdoc": "^3.3.x",
     "jshint": "^2.8.0",
     "mocha": "^2.3.x",
-    "sinon": "^1.17.x",
-    "uglify-js": "^2.5.x",
-    "browserify-shim": "^3.8.x",
+    "prop-types": "^15.5.10",
     "q": "1.4.1",
-    "immutable": "~3.8.x",
-    "react": "~0.14.x"
+    "react": "^16.0.0 || ^15.0.0",
+    "react-dom": "^16.0.0 || ^15.0.0",
+    "sinon": "^1.17.x",
+    "uglify-js": "^2.5.x"
   },
   "peerDependencies": {
     "immutable": "~3.8.x"
   },
   "browserify-shim": {
     "react": "global:React",
-    "immutable": "global:Immutable"
+    "immutable": "global:Immutable",
+    "react-dom": "global:ReactDOM",
+    "prop-types": "global:PropTypes"
   }
 }

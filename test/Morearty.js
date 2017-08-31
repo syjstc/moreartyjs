@@ -1,18 +1,21 @@
-var domino = require('domino');
+const domino = require('domino');
 
-var window = domino.createWindow('<div><div id="root"></div><div id="altRoot"></div></div>');
+const window = domino.createWindow('<div><div id="root"></div><div id="altRoot"></div></div>');
 global.window = window;
 global.document = window.document;
 global.navigator = global.window.navigator;
 
-var assert = require('chai').assert;
-var sinon = require('sinon');
-var Imm = require('immutable');
-var IMap = Imm.Map;
-var React = require('react');
-var Morearty = require('../src/Morearty')(React);
-var Util = require('../src/Util');
-var Binding = require('../src/Binding');
+const assert = require('chai').assert;
+const sinon = require('sinon');
+const Imm = require('immutable');
+const IMap = Imm.Map;
+const React = require('react');
+const ReactDOM = require('react-dom');
+const createReactClass = require('create-react-class');
+
+const Morearty = require('../src/Morearty')(React);
+const Util = require('../src/Util');
+const Binding = require('../src/Binding');
 
 var waitRender = function (f) {
   setTimeout(f, 20);
@@ -40,7 +43,7 @@ createClass = function (spec) {
   if (!spec.render) {
     spec.render = function () { return null; };
   }
-  return React.createClass(spec);
+  return createReactClass(spec);
 };
 
 describe('Morearty', function () {
@@ -127,7 +130,7 @@ describe('Morearty', function () {
           render: function () { return null; }
         });
 
-        React.render(React.createFactory(clazz)({ binding: ctx.getBinding() }), global.document.getElementById('root'));
+        ReactDOM.render(React.createFactory(clazz)({ binding: ctx.getBinding() }), global.document.getElementById('root'));
 
         var previousState = ctx.getCurrentState();
         ctx.getBinding().set('key2', 'value2');
@@ -163,7 +166,7 @@ describe('Morearty', function () {
           render: function () { return null; }
         });
 
-        React.render(React.createFactory(clazz)({ binding: ctx.getBinding() }), global.document.getElementById('root'));
+        ReactDOM.render(React.createFactory(clazz)({ binding: ctx.getBinding() }), global.document.getElementById('root'));
 
         var previousMeta = ctx.getCurrentMeta();
         ctx.getBinding().meta().set('meta');
@@ -193,22 +196,22 @@ describe('Morearty', function () {
         var comp1 = createClass({
           render: function () {
             render1CalledTimes++;
-            return React.DOM.h1(null, this.getDefaultBinding().get('key'));
+            return React.createElement('h1', null, this.getDefaultBinding().get('key'));
           }
         });
 
         var comp2 = createClass({
           render: function () {
             render2CalledTimes++;
-            return React.DOM.h2(null, this.getDefaultBinding().get('key'));
+            return React.createElement('h2', null, this.getDefaultBinding().get('key'));
           }
         });
 
         var bootstrap1 = React.createFactory(ctx1.bootstrap(comp1));
         var bootstrap2 = React.createFactory(ctx2.bootstrap(comp2));
 
-        React.render(bootstrap1(), global.document.getElementById('root'));
-        React.render(bootstrap2(), global.document.getElementById('altRoot'));
+        ReactDOM.render(bootstrap1(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrap2(), global.document.getElementById('altRoot'));
 
         b.set('key', 'bar');
         waitRender(function () {
@@ -245,7 +248,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
         ctx.getBinding().set('key1', 'foo');
         waitRender(function () {
           ctx.getBinding().set('key2', 'bar');
@@ -743,7 +746,7 @@ describe('Morearty', function () {
         });
         var Bootstrap = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(Bootstrap(), global.document.getElementById('root'));
+        ReactDOM.render(Bootstrap(), global.document.getElementById('root'));
         assert.isTrue(true);
       });
 
@@ -757,7 +760,7 @@ describe('Morearty', function () {
         });
         var Bootstrap = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(Bootstrap({ prop: 'value' }), global.document.getElementById('root'));
+        ReactDOM.render(Bootstrap({ prop: 'value' }), global.document.getElementById('root'));
         assert.isTrue(true);
       });
     });
@@ -780,7 +783,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(appComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
         assert.isFunction(shouldComponentUpdate);
       });
 
@@ -810,7 +813,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
         o.test1(ctx);
         waitRender(function () {
           o.test2(ctx);
@@ -937,7 +940,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         waitRender(function () {
           self.setState({ key: '2' });
@@ -976,7 +979,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
         ctx.getBinding().set('root.key1', 'foo');
         waitRender(function () {
           ctx.getMetaBinding().set('root.key1', 'meta');
@@ -1006,7 +1009,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(appComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
         ctx.getBinding().set('root.key1', 'foo');
         waitRender(function () {
           assert.isTrue(called);
@@ -1047,7 +1050,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
         binding.set('root.key1', 'foo');
         waitRender(function () {
           binding.set('root.key2', 'bar');
@@ -1079,7 +1082,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(comp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isNotNull(binding);
         assert.strictEqual(binding.get(), 'value');
@@ -1108,7 +1111,7 @@ describe('Morearty', function () {
         });
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isNotNull(binding1);
         assert.strictEqual(binding1.get(), 'value1');
@@ -1139,7 +1142,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isNotNull(binding);
         assert.strictEqual(binding.get(), 'value');
@@ -1166,7 +1169,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isNotNull(binding);
         assert.strictEqual(binding.get(), 'value');
@@ -1193,7 +1196,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isNotNull(binding);
         assert.strictEqual(binding.get(), 'value');
@@ -1223,7 +1226,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isNotNull(binding);
         assert.strictEqual(binding.get(), 'value');
@@ -1253,7 +1256,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         ctx.getBinding().set('root.key', 'value1');
         waitRender(function () {
@@ -1286,7 +1289,7 @@ describe('Morearty', function () {
         });
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.strictEqual(renderCalledTimes, 1);
 
@@ -1320,7 +1323,7 @@ describe('Morearty', function () {
         });
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.strictEqual(renderCalledTimes, 1);
 
@@ -1355,7 +1358,7 @@ describe('Morearty', function () {
         });
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.strictEqual(renderCalledTimes, 1);
 
@@ -1397,7 +1400,7 @@ describe('Morearty', function () {
         });
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.strictEqual(renderCalledTimes, 1);
         assert.strictEqual(render2CalledTimes, 1);
@@ -1442,7 +1445,7 @@ describe('Morearty', function () {
         });
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.strictEqual(renderCalledTimes, 1);
         assert.strictEqual(render2CalledTimes, 1);
@@ -1491,7 +1494,7 @@ describe('Morearty', function () {
         });
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.strictEqual(renderCalledTimes, 1);
         assert.strictEqual(render2CalledTimes, 1);
@@ -1556,7 +1559,7 @@ describe('Morearty', function () {
         });
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.strictEqual(renderCalledTimes, 1);
 
@@ -1594,7 +1597,7 @@ describe('Morearty', function () {
         });
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         waitRender(function () {
           ctx.getBinding().set('foo', 2);
@@ -1631,7 +1634,7 @@ describe('Morearty', function () {
         });
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         waitRender(function () {
           binding.set('show', false);
@@ -1666,7 +1669,7 @@ describe('Morearty', function () {
         });
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.strictEqual(renderCalledTimes, 1);
 
@@ -1697,7 +1700,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isTrue(ctx.getBinding().get('key').equals(IMap({ key1: 'value1', key2: 'value2' })));
       });
@@ -1724,7 +1727,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isTrue(ctx.getBinding().get('key').equals(IMap({ key1: 'foo', key2: 'value2' })));
       });
@@ -1751,7 +1754,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isTrue(ctx.getBinding().get('key').equals(IMap({ key1: 'value1', key2: 'value2' })));
       });
@@ -1778,7 +1781,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isTrue(ctx.getBinding().get('key').equals(IMap({ key1: 'value1' })));
       });
@@ -1805,7 +1808,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isTrue(ctx.getBinding().get('key').equals(IMap({ key1: 'value1', key2: 'value2' })));
       });
@@ -1832,7 +1835,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isTrue(ctx.getBinding().get('key').equals(IMap({ key1: 'foo', key2: 'value2' })));
       });
@@ -1865,7 +1868,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.strictEqual(currentValue, initialState.get('key'));
         assert.strictEqual(defaultValue, defaultState);
@@ -1894,7 +1897,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isTrue(binding.get().equals(IMap({ default: 'foo', aux: 'bar' })));
       });
@@ -1920,7 +1923,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isTrue(ctx.getBinding().sub('key').meta().get().equals(IMap({ key1: 'value1', key2: 'value2' })));
       });
@@ -1947,7 +1950,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isTrue(ctx.getBinding().sub('key').meta().get().equals(IMap({ key1: 'foo', key2: 'value2' })));
       });
@@ -1973,7 +1976,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isTrue(ctx.getBinding().sub('key').meta().get().equals(IMap({ key1: 'value1', key2: 'value2' })));
       });
@@ -2000,7 +2003,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isTrue(ctx.getBinding().sub('key').meta().get().equals(IMap({ key1: 'value1' })));
       });
@@ -2027,7 +2030,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isTrue(ctx.getBinding().sub('key').meta().get().equals(IMap({ key1: 'value1', key2: 'value2' })));
       });
@@ -2054,7 +2057,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isTrue(ctx.getBinding().sub('key').meta().get().equals(IMap({ key1: 'foo', key2: 'value2' })));
       });
@@ -2087,7 +2090,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.strictEqual(currentValue, initialMetaState.getIn(['key', '__meta__']));
         assert.strictEqual(defaultValue, defaultMetaState);
@@ -2116,7 +2119,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.strictEqual(binding.sub('default').meta().get(), 'foo');
         assert.strictEqual(binding.sub('aux').meta().get(), 'bar');
@@ -2154,7 +2157,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         assert.isTrue(binding.get().equals(IMap({ default: 'default', aux: 'bar' })));
       });
@@ -2184,7 +2187,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         binding.set('key.key2', 'foo');
         assert.isTrue(listenerCalled);
@@ -2211,7 +2214,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         binding.set('key.key2', 'foo');
         assert.isNotNull(listenerId);
@@ -2243,7 +2246,7 @@ describe('Morearty', function () {
 
         var bootstrapComp = React.createFactory(ctx.bootstrap(rootComp));
 
-        React.render(bootstrapComp(), global.document.getElementById('root'));
+        ReactDOM.render(bootstrapComp(), global.document.getElementById('root'));
 
         binding.set('key.key2', 'foo');
         assert.isTrue(listenerCalled);
