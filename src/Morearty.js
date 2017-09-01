@@ -66,7 +66,7 @@ countProps = function (props) {
   return count;
 };
 
-propsChanged = function (self, currentProps) {
+propsChanged = function (self, currentProps, propCompareFunctions) {
   var effectiveCurrentProps = currentProps || {}, effectivePreviousProps = self.props || {};
 
   if (countProps(effectiveCurrentProps) !== countProps(effectivePreviousProps)) {
@@ -74,7 +74,11 @@ propsChanged = function (self, currentProps) {
   } else {
     for (var prop in effectiveCurrentProps) {
       //noinspection JSUnfilteredForInLoop
-      if (prop !== 'binding' && propChanged(prop, effectiveCurrentProps, effectivePreviousProps)) return true;
+      if (propCompareFunctions[prop]) {
+        if (!propCompareFunctions[prop](effectivePreviousProps[prop], effectiveCurrentProps[prop])) return true
+      } else {
+        if (prop !== 'binding' && propChanged(prop, effectiveCurrentProps, effectivePreviousProps)) return true;
+      }
     }
     return false;
   }
@@ -700,13 +704,18 @@ module.exports = function (React, DOM) {
         var previousState = self._previousState;
         var previousMetaState = self._previousMetaState;
 
+        var propCompareFunctions = {}
+        if (self.getPropCompareFunctions){
+            propCompareFunctions = self.getPropCompareFunctions()
+        }
+
         savePreviousState(self);
 
         var shouldComponentUpdate = function () {
           return ctx._fullUpdateInProgress ||
             thisStateChange(self, nextState) ||
             stateChanged(self, getBinding(nextProps), getBinding(self.props), previousState, previousMetaState) ||
-            propsChanged(self, nextProps);
+            propsChanged(self, nextProps, propCompareFunctions);
         };
 
         var shouldComponentUpdateOverride = self.shouldComponentUpdateOverride;
