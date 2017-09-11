@@ -42,7 +42,7 @@
     "chai": "^3.4.0",
     "create-react-class": "^15.6.0",
     "domino": "^1.0.x",
-    "immutable": "~3.8.x",
+    "immutable": "^4.0.0-rc.2",
     "jquery": "^2.1.x",
     "jsdoc": "^3.3.x",
     "jshint": "^2.8.0",
@@ -55,7 +55,7 @@
     "uglify-js": "^2.5.x"
   },
   "peerDependencies": {
-    "immutable": "~3.8.x"
+    "immutable": "^4.0.0-rc.2"
   },
   "browserify-shim": {
     "react": "global:React",
