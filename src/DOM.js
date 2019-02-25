@@ -1,7 +1,7 @@
-const Util  = require('./Util');
-const React = require('react');
-const ReactDom = require('react-dom');
-const createClass = require('create-react-class');
+var Util  = require('./Util');
+var React = require('react');
+var ReactDom = require('react-dom');
+var createClass = require('create-react-class');
 
 
 var _ = (function() {

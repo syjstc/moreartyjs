@@ -5531,10 +5531,10 @@ module.exports = ChangesDescriptor;
 
 },{"./Util":44}],41:[function(require,module,exports){
 (function (global){
-const Util  = require('./Util');
-const React = (typeof window !== "undefined" ? window['React'] : typeof global !== "undefined" ? global['React'] : null);
-const ReactDom = (typeof window !== "undefined" ? window['ReactDOM'] : typeof global !== "undefined" ? global['ReactDOM'] : null);
-const createClass = require('create-react-class');
+var Util  = require('./Util');
+var React = (typeof window !== "undefined" ? window['React'] : typeof global !== "undefined" ? global['React'] : null);
+var ReactDom = (typeof window !== "undefined" ? window['ReactDOM'] : typeof global !== "undefined" ? global['ReactDOM'] : null);
+var createClass = require('create-react-class');
 
 
 var _ = (function() {
